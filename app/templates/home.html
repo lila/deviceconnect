@@ -72,7 +72,7 @@ and is wrapped around the whole page content, except for the footer in this exam
             {% if not is_fitbit_registered %}
             <h4>
               <a id="fitbit_link" type="button" style="color:#3c3c3c; font-family: 'Avenir Next World Regular'" href={{
-                url_for('fitbit.login') }}>Register Fitbit</a>
+                url_for('fitbit_auth_bp.device_registration') }}>Register Fitbit</a>
             </h4>
             {% else %}
             <button class="registered-btn" id="fibit_register">Registered</button> |

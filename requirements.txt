@@ -9,7 +9,10 @@ pandas
 pandas_gbq
 gunicorn==20.1.0
 python-dotenv
-flask-dance
+pyopenssl
+# flask-dance
+# for the added dexcom files, need to install from github
+git+https://github.com/singingwolfboy/flask-dance
 flask-login
 werkzeug
 

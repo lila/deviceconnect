@@ -38,9 +38,9 @@ import os
 import logging
 from flask import Flask, session, redirect, render_template, request, url_for
 from werkzeug.middleware.proxy_fix import ProxyFix
-from flask_dance.contrib.fitbit import fitbit
 
-from .fitbit_auth import bp as fitbit_auth_bp, fitbit_bp
+from .fitbit_auth import bp as fitbit_auth_bp, firestorage as fitbit_storage, fitbit_session
+
 from .frontend import bp as frontend_bp
 from .fitbit_ingest import bp as fitbit_ingest_bp
 
@@ -57,8 +57,8 @@ app.wsgi_app = ProxyFix(app.wsgi_app)
 #
 # setup blueprints and routes
 #
-app.register_blueprint(fitbit_auth_bp)
-app.register_blueprint(fitbit_bp, url_prefix="/services")  # from flask-dance
+app.register_blueprint(fitbit_auth_bp, url_prefix="/fitbit")
+
 if not os.environ.get("FRONTEND_ONLY"):
     app.register_blueprint(fitbit_ingest_bp)
 if not os.environ.get("BACKEND_ONLY"):
@@ -75,11 +75,6 @@ if os.environ.get("DEBUG"):
 #
 
 
-@app.route("/splash")
-def splash():
-    return render_template("splash.html")
-
-
 @app.route("/")
 def index():
     """Show user's fitbit linking status, or spash page"""
@@ -90,17 +85,17 @@ def index():
     user = session.get("user")
 
     if not user:
-        return redirect(url_for("splash"))
+        return render_template("login.html")
 
-    fitbit_bp.storage.user = user["email"]
-    if fitbit_bp.session.token:
-        del fitbit_bp.session.token
+    fitbit_storage.user = user["email"]
+    if fitbit_session.token:
+        del fitbit_session.token
 
     return render_template(
         "home.html",
         user=user,
         app_name=request.host_url,
-        is_fitbit_registered=fitbit.authorized,
+        is_fitbit_registered=fitbit_session.authorized
     )
 
 

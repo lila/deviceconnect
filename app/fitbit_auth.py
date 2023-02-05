@@ -57,7 +57,7 @@ import pandas_gbq
 from skimpy import clean_columns
 
 from flask import Blueprint, redirect, url_for, session
-from flask_dance.contrib.fitbit import fitbit, make_fitbit_blueprint
+from flask_dance.contrib.fitbit import fitbit as fitbit_session, make_fitbit_blueprint
 
 from .firestore_storage import FirestoreStorage
 
@@ -77,7 +77,7 @@ FITBIT_SCOPES = [
 
 firestore_datasetname = os.environ.get("FIRESTORE_DATASET")
 if not firestore_datasetname:
-    firestore_datasetname = "tokens"
+    firestore_datasetname = "fitbit_tokens"
 firestorage = FirestoreStorage(firestore_datasetname)
 
 fitbit_bp = make_fitbit_blueprint(
@@ -86,8 +86,11 @@ fitbit_bp = make_fitbit_blueprint(
     scope=FITBIT_SCOPES,
     redirect_to="fitbit_auth_bp.device_registration",
     storage=firestorage,
+    login_url="/oauth",
+    authorized_url="/oauth/authorized"
 )
 bp = Blueprint("fitbit_auth_bp", __name__)
+bp.register_blueprint(fitbit_bp)
 
 log = logging.getLogger(__name__)
 
@@ -117,12 +120,12 @@ def device_registration():
 
     fitbit_bp.storage.user = username
 
-    if not fitbit.authorized:
-        return redirect(url_for("fitbit.login"))
+    if not fitbit_session.authorized:
+        return redirect(url_for("fitbit_auth_bp.fitbit.login"))
 
     else:
         try:
-            resp = fitbit.get("/1/user/-/profile.json")
+            resp = fitbit_session.get("/1/user/-/profile.json")
 
             log.debug(
                 f"retrieved profile for {username}: status {resp.status_code}/{resp.reason}"
@@ -144,7 +147,7 @@ def device_delete():
     deletes oauth tokens from stable storage so no further
     data will be ingested.
     """
-    if fitbit.authorized:
+    if fitbit_session.authorized:
         log.debug("deleting user token for %s", fitbit_bp.storage.user)
         del fitbit_bp.token
     else:
