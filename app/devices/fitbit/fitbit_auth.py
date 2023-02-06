@@ -59,7 +59,7 @@ from skimpy import clean_columns
 from flask import Blueprint, redirect, url_for, session
 from flask_dance.contrib.fitbit import fitbit as fitbit_session, make_fitbit_blueprint
 
-from .firestore_storage import FirestoreStorage
+from ...firestore_storage import FirestoreStorage
 
 FITBIT_SCOPES = [
     "activity",

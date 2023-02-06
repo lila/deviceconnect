@@ -27,7 +27,7 @@ from skimpy import clean_columns
 from flask import Blueprint, redirect, url_for, session
 from flask_dance.contrib.dexcom import dexcom as dexcom_session, make_dexcom_blueprint
 
-from .firestore_storage import FirestoreStorage
+from ...firestore_storage import FirestoreStorage
 
 firestore_datasetname = "dexcom_tokens"
 firestorage = FirestoreStorage(firestore_datasetname)

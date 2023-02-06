@@ -39,12 +39,12 @@ import logging
 from flask import Flask, session, redirect, render_template, request, url_for
 from werkzeug.middleware.proxy_fix import ProxyFix
 
-from .fitbit_auth import bp as fitbit_auth_bp, firestorage as fitbit_storage, fitbit_session
-from .dexcom_auth import bp as dexcom_auth_bp, firestorage as dexcom_storage, dexcom_session
+from .devices.fitbit.fitbit_auth import bp as fitbit_auth_bp, firestorage as fitbit_storage, fitbit_session
+from .devices.dexcom.dexcom_auth import bp as dexcom_auth_bp, firestorage as dexcom_storage, dexcom_session
 
 from .frontend import bp as frontend_bp
-from .fitbit_ingest import bp as fitbit_ingest_bp
-
+from .devices.fitbit.fitbit_ingest import bp as fitbit_ingest_bp
+from .devices.dexcom.dexcom_ingest import bp as dexcom_ingest_bp
 
 #
 # configuration
@@ -63,6 +63,7 @@ app.register_blueprint(dexcom_auth_bp, url_prefix="/dexcom")
 
 if not os.environ.get("FRONTEND_ONLY"):
     app.register_blueprint(fitbit_ingest_bp)
+    app.register_blueprint(dexcom_ingest_bp)
 if not os.environ.get("BACKEND_ONLY"):
     app.register_blueprint(frontend_bp)
 
