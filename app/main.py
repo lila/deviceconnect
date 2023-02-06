@@ -40,6 +40,7 @@ from flask import Flask, session, redirect, render_template, request, url_for
 from werkzeug.middleware.proxy_fix import ProxyFix
 
 from .fitbit_auth import bp as fitbit_auth_bp, firestorage as fitbit_storage, fitbit_session
+from .dexcom_auth import bp as dexcom_auth_bp, firestorage as dexcom_storage, dexcom_session
 
 from .frontend import bp as frontend_bp
 from .fitbit_ingest import bp as fitbit_ingest_bp
@@ -58,6 +59,7 @@ app.wsgi_app = ProxyFix(app.wsgi_app)
 # setup blueprints and routes
 #
 app.register_blueprint(fitbit_auth_bp, url_prefix="/fitbit")
+app.register_blueprint(dexcom_auth_bp, url_prefix="/dexcom")
 
 if not os.environ.get("FRONTEND_ONLY"):
     app.register_blueprint(fitbit_ingest_bp)
@@ -95,7 +97,8 @@ def index():
         "home.html",
         user=user,
         app_name=request.host_url,
-        is_fitbit_registered=fitbit_session.authorized
+        is_fitbit_registered=fitbit_session.authorized,
+        is_dexcom_registered=dexcom_session.authorized
     )
 
 
