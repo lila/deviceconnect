@@ -303,4 +303,77 @@ resource "google_cloud_scheduler_job" "fitbit_skintemp_pull" {
   }
 }
 
+resource "google_cloud_scheduler_job" "dexcom_devices_pull" {
+  project = var.project_id
+  region  = var.region
+
+  name             = "dexcom_devices_pull"
+  description      = "Pull dexcom devices api"
+  schedule         = "20 14 * * *"
+  time_zone        = "America/New_York"
+  attempt_deadline = "320s"
+
+  retry_config {
+    retry_count = 1
+  }
+
+  http_target {
+    http_method = "GET"
+    uri         = "${var.webapp_base_url}/dexcom-devices"
+
+    oidc_token {
+      service_account_email = module.cloud-scheduler-service-account.email
+    }
+  }
+}
+
+resource "google_cloud_scheduler_job" "dexcom_egvs_pull" {
+  project = var.project_id
+  region  = var.region
+
+  name             = "dexcom_egvs_pull"
+  description      = "Pull dexcom egvs api"
+  schedule         = "25 14 * * *"
+  time_zone        = "America/New_York"
+  attempt_deadline = "320s"
+
+  retry_config {
+    retry_count = 1
+  }
+
+  http_target {
+    http_method = "GET"
+    uri         = "${var.webapp_base_url}/dexcom-egvs"
+
+    oidc_token {
+      service_account_email = module.cloud-scheduler-service-account.email
+    }
+  }
+}
+
+resource "google_cloud_scheduler_job" "dexcom_events_pull" {
+  project = var.project_id
+  region  = var.region
+
+  name             = "dexcom_events_pull"
+  description      = "Pull dexcom events api"
+  schedule         = "30 14 * * *"
+  time_zone        = "America/New_York"
+  attempt_deadline = "320s"
+
+  retry_config {
+    retry_count = 1
+  }
+
+  http_target {
+    http_method = "GET"
+    uri         = "${var.webapp_base_url}/dexcom-events"
+
+    oidc_token {
+      service_account_email = module.cloud-scheduler-service-account.email
+    }
+  }
+}
+
+
 
