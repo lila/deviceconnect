@@ -77,7 +77,10 @@ FITBIT_SCOPES = [
 
 firestore_datasetname = os.environ.get("FIRESTORE_DATASET")
 if not firestore_datasetname:
-    firestore_datasetname = "fitbit_tokens"
+    firestore_datasetname = "tokens_fitbit"
+else:
+    firestore_datasetname = firestore_datasetname + "_fitbit"
+
 firestorage = FirestoreStorage(firestore_datasetname)
 
 fitbit_bp = make_fitbit_blueprint(
@@ -94,7 +97,9 @@ bp.register_blueprint(fitbit_bp)
 
 log = logging.getLogger(__name__)
 
-bigquery_datasetname = os.environ.get("BIGQUERY_DATASET")
+bigquery_datasetname = os.environ.get("BIGQUERY_FITBIT_DATASET")
+if not bigquery_datasetname:
+    bigquery_datasetname = "fitbit"
 
 
 def _tablename(table: str) -> str:

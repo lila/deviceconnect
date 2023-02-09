@@ -81,9 +81,9 @@ log = logging.getLogger(__name__)
 
 bp = Blueprint("fitbit_ingest_bp", __name__)
 
-bigquery_datasetname = os.environ.get("BIGQUERY_DATASET")
+bigquery_datasetname = os.environ.get("BIGQUERY_FITBIT_DATASET")
 if not bigquery_datasetname:
-    bigquery_datasetname = "fitbit2"
+    bigquery_datasetname = "fitbit"
 
 
 def _tablename(table: str) -> str:
@@ -1748,7 +1748,8 @@ def fitbit_intraday_scope():
 
             log.debug("%s: %d [%s]", resp.url, resp.status_code, resp.reason)
 
-            intraday_steps = resp.json()["activities-steps-intraday"]["dataset"]
+            intraday_steps = resp.json(
+            )["activities-steps-intraday"]["dataset"]
             intraday_steps_df = pd.json_normalize(intraday_steps)
             intraday_steps_columns = ["time", "value"]
             intraday_steps_df = _normalize_response(
@@ -1848,7 +1849,8 @@ def fitbit_intraday_scope():
             intraday_elevation_df["date_time"] = pd.to_datetime(
                 date_pulled + " " + intraday_elevation_df["time"]
             )
-            intraday_elevation_df = intraday_elevation_df.drop(["time"], axis=1)
+            intraday_elevation_df = intraday_elevation_df.drop(
+                ["time"], axis=1)
             intraday_elevation_list.append(intraday_elevation_df)
 
         except (Exception) as e:
@@ -2550,7 +2552,6 @@ def fitbit_spo2_scope():
         except (Exception) as e:
             log.error("spo2 exception occured: %s", str(e))
 
-    
     stop = timeit.default_timer()
     execution_time = stop - start
     print("spo2 Scope Loaded: " + str(execution_time))
@@ -2562,6 +2563,8 @@ def fitbit_spo2_scope():
 #
 # SPO2 intraday
 #
+
+
 @bp.route("/fitbit_spo2_intraday_scope")
 def fitbit_spo2_intraday_scope():
     start = timeit.default_timer()
@@ -2656,7 +2659,6 @@ def fitbit_spo2_intraday_scope():
         except (Exception) as e:
             log.error("spo2 exception occured: %s", str(e))
 
-    
     stop = timeit.default_timer()
     execution_time = stop - start
     print("spo2 Scope Loaded: " + str(execution_time))
@@ -2769,7 +2771,6 @@ def fitbit_temp_scope():
         except (Exception) as e:
             log.error("temp exception occured: %s", str(e))
 
-    
     stop = timeit.default_timer()
     execution_time = stop - start
     print("temp Scope Loaded: " + str(execution_time))

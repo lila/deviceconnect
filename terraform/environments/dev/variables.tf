@@ -90,6 +90,16 @@ variable "fitbit_oauth_client_secret" {
   description = "fitbit webapi developer client secret"
 }
 
+variable "dexcom_oauth_client_id" {
+  type        = string
+  description = "dexcom webapi developer client id"
+}
+
+variable "dexcom_oauth_client_secret" {
+  type        = string
+  description = "dexcom webapi developer client secret"
+}
+
 variable "openid_auth_metadata_url" {
   type        = string
   description = "see documentation"
@@ -105,10 +115,16 @@ variable "openid_auth_client_secret" {
   description = "see documentation"
 }
 
-variable "bigquery_dataset" {
+variable "bigquery_fitbit_dataset" {
   type        = string
-  description = "the name of the bigquery dataset to use"
+  description = "the name of the bigquery dataset to use for fitbit data"
   default     = "fitbit"
+}
+
+variable "bigquery_dexcom_dataset" {
+  type        = string
+  description = "the name of the bigquery dataset to use for dexcom data"
+  default     = "dexcom"
 }
 
 variable "firestore_dataset" {

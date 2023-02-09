@@ -29,13 +29,16 @@ from flask_dance.contrib.dexcom import dexcom as dexcom_session, make_dexcom_blu
 
 from ...firestore_storage import FirestoreStorage
 
-firestore_datasetname = "dexcom_tokens"
+firestore_datasetname = os.environ.get("FIRESTORE_DATASET")
+if not firestore_datasetname:
+    firestore_datasetname = "tokens_dexcom"
+else:
+    firestore_datasetname = firestore_datasetname + "_dexcom"
 firestorage = FirestoreStorage(firestore_datasetname)
 
-
 dexcom_bp = make_dexcom_blueprint(
-    client_id="7D5zQjLfewjC9R6xg93NB8PgXYcovLHU",
-    client_secret="IbmUWVflSQev1hlQ",
+    client_id=os.environ.get("DEXCOM_OAUTH_CLIENT_ID"),
+    client_secret=os.environ.get("DEXCOM_OAUTH_CLIENT_SECRET"),
     scope="offline_access",
     redirect_url="/",
     storage=firestorage,

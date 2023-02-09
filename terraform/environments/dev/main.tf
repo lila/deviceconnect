@@ -78,11 +78,14 @@ module "enrollment_webapp" {
   repository_id         = "cloudrun"
   allow_unauthenticated = true
   web_app_domain        = var.web_app_domain
-  bigquery_dataset      = var.bigquery_dataset
+  bigquery_fitbit_dataset      = var.bigquery_fitbit_dataset
+  bigquery_dexcom_dataset      = var.bigquery_dexcom_dataset
   firestore_dataset     = var.firestore_dataset
   env_vars = [
     { name = "FITBIT_OAUTH_CLIENT_ID", value = var.fitbit_oauth_client_id },
     { name = "FITBIT_OAUTH_CLIENT_SECRET", value = var.fitbit_oauth_client_secret },
+    { name = "DEXCOM_OAUTH_CLIENT_ID", value = var.dexcom_oauth_client_id },
+    { name = "DEXCOM_OAUTH_CLIENT_SECRET", value = var.dexcom_oauth_client_secret },
     { name = "OPENID_AUTH_METADATA_URL", value = var.openid_auth_metadata_url },
     { name = "OPENID_AUTH_CLIENT_ID", value = var.openid_auth_client_id },
     { name = "OPENID_AUTH_CLIENT_SECRET", value = var.openid_auth_client_secret }
@@ -95,7 +98,8 @@ module "bigquery" {
   source           = "../../modules/bigquery"
   project_id       = var.project_id
   region           = var.region
-  bigquery_dataset = var.bigquery_dataset
+  bigquery_fitbit_dataset = var.bigquery_fitbit_dataset
+  bigquery_dexcom_dataset = var.bigquery_dexcom_dataset
 }
 
 module "cloudscheduler" {

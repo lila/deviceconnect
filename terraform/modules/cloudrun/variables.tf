@@ -30,7 +30,12 @@ variable "service_name" {
   description = "CloudRun service name"
 }
 
-variable "bigquery_dataset" {
+variable "bigquery_fitbit_dataset" {
+  type        = string
+  description = "the bigquery dataset to push data"
+}
+
+variable "bigquery_dexcom_dataset" {
   type        = string
   description = "the bigquery dataset to push data"
 }

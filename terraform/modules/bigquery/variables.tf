@@ -25,7 +25,12 @@ variable "region" {
   description = "GCP region"
 }
 
-variable "bigquery_dataset" {
+variable "bigquery_fitbit_dataset" {
   type        = string
-  description = "bigquery dataset to create"
+  description = "bigquery dataset for fitbit data"
+}
+
+variable "bigquery_dexcom_dataset" {
+  type        = string
+  description = "bigquery dataset for dexcom data"
 }

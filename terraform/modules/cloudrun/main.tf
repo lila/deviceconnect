@@ -134,8 +134,12 @@ resource "google_cloud_run_service" "webapp" {
           value = true
         }
         env {
-          name = "BIGQUERY_DATASET"
-          value = var.bigquery_dataset
+          name = "BIGQUERY_FITBIT_DATASET"
+          value = var.bigquery_fitbit_dataset
+        }
+        env {
+          name = "BIGQUERY_DEXCOM_DATASET"
+          value = var.bigquery_dexcom_dataset
         }
         env {
           name = "FIRESTORE_DATASET"
@@ -161,15 +165,13 @@ resource "google_cloud_run_service" "webapp" {
   depends_on = [null_resource.deploy-cloudrun-image]
 }
 
-data "google_project" "project" {}
-
 resource "google_cloud_run_domain_mapping" "webapp" {
   count = "${var.web_app_domain != "" ? 1 : 0}"
 
   name     = var.web_app_domain
   location = google_cloud_run_service.webapp.location
   metadata {
-    namespace = data.google_project.project.project_id
+    namespace = var.project_id
   }
   spec {
     route_name = google_cloud_run_service.webapp.name
@@ -205,8 +207,12 @@ resource "google_cloud_run_service" "ingest" {
           value = true
         }
         env {
-          name = "BIGQUERY_DATASET"
-          value = var.bigquery_dataset
+          name = "BIGQUERY_FITBIT_DATASET"
+          value = var.bigquery_fitbit_dataset
+        }
+        env {
+          name = "BIGQUERY_DEXCOM_DATASET"
+          value = var.bigquery_dexcom_dataset
         }
         env {
           name = "FIRESTORE_DATASET"
