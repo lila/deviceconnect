@@ -104,7 +104,6 @@ def _date_today():
 @bp.route("/dexcom-devices")
 def dexcom_devices():
 
-    start = timeit.default_timer()
     project_id = os.environ.get("GOOGLE_CLOUD_PROJECT")
     # if caller provided date as query params, use that otherwise use yesterday
     date_pulled = request.args.get("date", _date_pulled())
@@ -122,7 +121,8 @@ def dexcom_devices():
 
     for user in user_list:
 
-        log.debug("user: %s", user)
+        log.debug("user: %s, dates: %s - %s", user,
+                  date_pulled, date_pulled_plus_one)
 
         dexcom_bp.storage.user = user
 
@@ -155,64 +155,57 @@ def dexcom_devices():
             devices_df = _normalize_response(
                 devices_df, devices_columns, user, date_pulled
             )
+            devices_df["last_upload_date"] = pd.to_datetime(
+                devices_df["last_upload_date"]
+            )
+
             device_list.append(devices_df)
 
         except (Exception) as e:
-            log.error("exception occured /dexcom-devices: %s", str(e))
-
-    load_stop = timeit.default_timer()
-    time_to_load = load_stop - start
-
-    log.debug("push to BQ")
+            # ignore any errors... we'll just miss this user's data
+            log.error(
+                "exception occured for user %s in /dexcom-devices: %s", user, str(e))
 
     if len(device_list) > 0:
 
-        try:
+        bulk_device_df = pd.concat(device_list, axis=0)
 
-            bulk_device_df = pd.concat(device_list, axis=0)
+        log.debug(bulk_device_df.head(5))
+        log.debug("tablename = %s", _tablename('dexcom-devices'))
+        log.debug("project_id=%s", project_id)
 
-            log.debug(bulk_device_df.head(5))
-            log.debug(f"tablename = {_tablename('dexcom-devices')}")
-            log.debug(f"project_id={project_id}")
-
-            pandas_gbq.to_gbq(
-                dataframe=bulk_device_df,
-                destination_table=_tablename("dexcom-devices"),
-                project_id=project_id,
-                if_exists="append",
-                table_schema=[
-                    {
-                        "name": "id",
-                        "type": "STRING",
-                        "mode": "REQUIRED",
-                        "description": "Primary Key",
-                    },
-                    {
-                        "name": "date",
-                        "type": "DATE",
-                        "mode": "REQUIRED",
-                        "description": "The date values were extracted",
-                    },
-                    {
-                        "name": "transmitter_generation",
-                        "type": "STRING",
-                    },
-                    {
-                        "name": "display_device",
-                        "type": "STRING",
-                    },
-                    {
-                        "name": "last_upload_date",
-                        "type": "DATETIME",
-                    },
-                ],
-            )
-
-        except (Exception) as e:
-            log.error("exception occured BQ push /dexcom-devices: %s", str(e))
-
-    stop = timeit.default_timer()
-    execution_time = stop - start
+        pandas_gbq.to_gbq(
+            dataframe=bulk_device_df,
+            destination_table=_tablename("dexcom-devices"),
+            project_id=project_id,
+            if_exists="append",
+            table_schema=[
+                {
+                    "name": "id",
+                    "type": "STRING",
+                    "mode": "REQUIRED",
+                    "description": "Primary Key",
+                },
+                {
+                    "name": "date",
+                    "type": "DATE",
+                    "mode": "REQUIRED",
+                    "description": "The date values were extracted",
+                },
+                {
+                    "name": "transmitter_generation",
+                    "type": "STRING",
+                },
+                {
+                    "name": "display_device",
+                    "type": "STRING",
+                },
+                {
+                    "name": "last_upload_date",
+                    "type": "DATETIME",
+                },
+            ],
+        )
 
     dexcom_bp.storage.user = None
 
@@ -222,7 +215,6 @@ def dexcom_devices():
 @ bp.route("/dexcom-egvs")
 def dexcom_egvs():
 
-    start = timeit.default_timer()
     project_id = os.environ.get("GOOGLE_CLOUD_PROJECT")
     # if caller provided date as query params, use that otherwise use yesterday
     date_pulled = request.args.get("date", _date_pulled())
@@ -277,56 +269,52 @@ def dexcom_egvs():
             egvs_df = _normalize_response(
                 egvs_df, egvs_columns, user, date_pulled
             )
+            egvs_df["system_time"] = pd.to_datetime(
+                egvs_df["system_time"]
+            )
+            egvs_df["display_time"] = pd.to_datetime(
+                egvs_df["display_time"]
+            )
             egvs_list.append(egvs_df)
 
         except (Exception) as e:
-            log.error("exception occured: %s", str(e))
+            log.error(
+                "exception occured, ignoring and continuing /egvs: %s", str(e))
 
     # end loop over users
 
-    load_stop = timeit.default_timer()
-    time_to_load = load_stop - start
-
     if len(egvs_list) > 0:
 
-        try:
+        bulk_egvs_df = pd.concat(egvs_list, axis=0)
 
-            bulk_egvs_df = pd.concat(egvs_list, axis=0)
-
-            pandas_gbq.to_gbq(
-                dataframe=bulk_egvs_df,
-                destination_table=_tablename("dexcom-egvs"),
-                project_id=project_id,
-                if_exists="append",
-                table_schema=[
-                    {
-                        "name": "id",
-                        "type": "STRING",
-                        "mode": "REQUIRED",
-                        "description": "Primary Key",
-                    },
-                    {
-                        "name": "date",
-                        "type": "DATE",
-                        "mode": "REQUIRED",
-                        "description": "The date values were extracted",
-                    },
-                    {"name": "system_time", "type": "DATETIME"},
-                    {"name": "display_time", "type": "DATETIME"},
-                    {"name": "value", "type": "FLOAT"},
-                    {"name": "realtime_value", "type": "FLOAT"},
-                    {"name": "smoothed_value", "type": "FLOAT"},
-                    {"name": "status", "type": "STRING"},
-                    {"name": "trend", "type": "STRING"},
-                    {"name": "trend_rate", "type": "FLOAT"}
-                ],
-            )
-
-        except (Exception) as e:
-            log.error("exception occured: %s", str(e))
-
-    stop = timeit.default_timer()
-    execution_time = stop - start
+        pandas_gbq.to_gbq(
+            dataframe=bulk_egvs_df,
+            destination_table=_tablename("dexcom-egvs"),
+            project_id=project_id,
+            if_exists="append",
+            table_schema=[
+                {
+                    "name": "id",
+                    "type": "STRING",
+                    "mode": "REQUIRED",
+                    "description": "Primary Key",
+                },
+                {
+                    "name": "date",
+                    "type": "DATE",
+                    "mode": "REQUIRED",
+                    "description": "The date values were extracted",
+                },
+                {"name": "system_time", "type": "DATETIME"},
+                {"name": "display_time", "type": "DATETIME"},
+                {"name": "value", "type": "FLOAT"},
+                {"name": "realtime_value", "type": "FLOAT"},
+                {"name": "smoothed_value", "type": "FLOAT"},
+                {"name": "status", "type": "STRING"},
+                {"name": "trend", "type": "STRING"},
+                {"name": "trend_rate", "type": "FLOAT"}
+            ],
+        )
 
     dexcom_bp.storage.user = None
 
@@ -336,7 +324,6 @@ def dexcom_egvs():
 @ bp.route("/dexcom-events")
 def dexcom_events():
 
-    start = timeit.default_timer()
     project_id = os.environ.get("GOOGLE_CLOUD_PROJECT")
     # if caller provided date as query params, use that otherwise use yesterday
     date_pulled = request.args.get("date", _date_pulled())
@@ -389,6 +376,12 @@ def dexcom_events():
             events_df = _normalize_response(
                 events_df, events_columns, user, date_pulled
             )
+            events_df["system_time"] = pd.to_datetime(
+                events_df["system_time"]
+            )
+            events_df["display_time"] = pd.to_datetime(
+                events_df["display_time"]
+            )
             events_list.append(events_df)
 
         except (Exception) as e:
@@ -398,39 +391,34 @@ def dexcom_events():
 
     if len(events_list) > 0:
 
-        try:
+        bulk_events_df = pd.concat(events_list, axis=0)
 
-            bulk_events_df = pd.concat(events_list, axis=0)
-
-            pandas_gbq.to_gbq(
-                dataframe=bulk_events_df,
-                destination_table=_tablename("dexcom-events"),
-                project_id=project_id,
-                if_exists="append",
-                table_schema=[
-                    {
-                        "name": "id",
-                        "type": "STRING",
-                        "mode": "REQUIRED",
-                        "description": "Primary Key",
-                    },
-                    {
-                        "name": "date",
-                        "type": "DATE",
-                        "mode": "REQUIRED",
-                        "description": "The date values were extracted",
-                    },
-                    {"name": "system_time", "type": "DATETIME"},
-                    {"name": "display_time", "type": "DATETIME"},
-                    {"name": "event_type", "type": "STRING"},
-                    {"name": "event_sub_type", "type": "STRING"},
-                    {"name": "value", "type": "FLOAT"},
-                    {"name": "unit", "type": "STRING"}
-                ],
-            )
-
-        except (Exception) as e:
-            log.error("exception occured: %s", str(e))
+        pandas_gbq.to_gbq(
+            dataframe=bulk_events_df,
+            destination_table=_tablename("dexcom-events"),
+            project_id=project_id,
+            if_exists="append",
+            table_schema=[
+                {
+                    "name": "id",
+                    "type": "STRING",
+                    "mode": "REQUIRED",
+                    "description": "Primary Key",
+                },
+                {
+                    "name": "date",
+                    "type": "DATE",
+                    "mode": "REQUIRED",
+                    "description": "The date values were extracted",
+                },
+                {"name": "system_time", "type": "DATETIME"},
+                {"name": "display_time", "type": "DATETIME"},
+                {"name": "event_type", "type": "STRING"},
+                {"name": "event_sub_type", "type": "STRING"},
+                {"name": "value", "type": "FLOAT"},
+                {"name": "unit", "type": "STRING"}
+            ],
+        )
 
     dexcom_bp.storage.user = None
 

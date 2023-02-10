@@ -162,6 +162,7 @@ resource "google_cloud_run_service" "webapp" {
     percent         = 100
     latest_revision = true
   }
+  autogenerate_revision_name = true
   depends_on = [null_resource.deploy-cloudrun-image]
 }
 
@@ -235,5 +236,6 @@ resource "google_cloud_run_service" "ingest" {
     percent         = 100
     latest_revision = true
   }
+  autogenerate_revision_name = true
   depends_on = [null_resource.deploy-cloudrun-image]
 }
